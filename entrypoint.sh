@@ -24,24 +24,29 @@ echo "Updating configuration ..."
 
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@shinobi.video}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin}"
+ADMIN_PASSWORD_MD5="$(echo -n "${ADMIN_PASSWORD}" | md5sum | sed -e 's/  -$//')"
 
 MYSQL_HOST="${MYSQL_HOST:-mariadb}"
 MYSQL_USER="${MYSQL_USER:-shinobi}"
 MYSQL_PASSWORD="${MYSQL_PASSWORD:-}"
 MYSQL_DATABASE="ccio"
 MYSQL_PORT=3306
+# MYSQL_JSON="{host: ${MYSQL_HOST},user:${MYSQL_USER},password:${MYSQL_PASSWORD},database:${MYSQL_DATABASE},port:${MYSQL_PORT}}"
 
-ADMIN_PASSWORD_MD5="$(echo -n "${ADMIN_PASSWORD}" | md5sum | sed -e 's/  -$//')"
+# https://gitlab.com/Shinobi-Systems/Shinobi/-/blob/master/libs/health.js
+CUSTOM_CPU_COMMAND=$'top -b -n 2 | awk \'{IGNORECASE = 1} /^.?Cpu/ {gsub("id,","100",$8); gsub("%","",$8); print 100-$8}\' | tail -n 1'
 
-jq '.cpuUsageMarker = $val' --arg val "%Cpu(s)" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
+jq '.[0].mail = $val' --arg val "${ADMIN_EMAIL}" /config/super.json > /tmp/$$.json && mv /tmp/$$.json /config/super.json
+jq '.[0].pass = $val' --arg val "${ADMIN_PASSWORD_MD5}" /config/super.json > /tmp/$$.json && mv /tmp/$$.json /config/super.json
+
 jq '.db.host = $val' --arg val "${MYSQL_HOST}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 jq '.db.user = $val' --arg val "${MYSQL_USER}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 jq '.db.password = $val' --arg val "${MYSQL_PASSWORD}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 jq '.db.database = $val' --arg val "${MYSQL_DATABASE}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 jq '.db.port = $val' --arg val "${MYSQL_PORT}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
+# jq '.db = $val' --arg val "${MYSQL_JSON}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 
-jq '.[0].mail = $val' --arg val "${ADMIN_EMAIL}" /config/super.json > /tmp/$$.json && mv /tmp/$$.json /config/super.json
-jq '.[0].pass = $val' --arg val "${ADMIN_PASSWORD_MD5}" /config/super.json > /tmp/$$.json && mv /tmp/$$.json /config/super.json
+jq '.customCpuCommand = $val' --arg val "${CUSTOM_CPU_COMMAND}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 
 # TODO: backup/restore plugin configurations
 

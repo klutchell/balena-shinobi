@@ -1,8 +1,8 @@
-FROM balenalib/jetson-nano-ubuntu:bionic-build as l4t
+FROM balenalib/jetson-nano-ubuntu:bionic-build as drivers
 
 WORKDIR /usr/src/app
 
-ADD Jetson-210_Linux_R32.3.1_aarch64.tbz2 .
+ADD l4t-32.3.1/Jetson-210_Linux_R32.3.1_aarch64.tbz2 .
 
 RUN mkdir /opt/drivers \
     && tar xjf Linux_for_Tegra/nv_tegra/nvidia_drivers.tbz2 -C /opt/drivers \
@@ -11,45 +11,109 @@ RUN mkdir /opt/drivers \
 
 # ----------------------------------------------------------------------------
 
-FROM balenalib/jetson-nano-ubuntu:bionic-build as ffmpeg
+FROM balenalib/jetson-nano-ubuntu:bionic-build as cuda
 
-COPY --from=l4t /opt/drivers/ /
+WORKDIR /usr/src/app
 
-WORKDIR /usr/src/nvmpi
+COPY l4t-32.3.1/cuda-repo-l4t-10-0-local-10.0.326_1.0-1_arm64.deb .
+COPY l4t-32.3.1/libcudnn7_7.6.3.28-1+cuda10.0_arm64.deb .
+COPY l4t-32.3.1/libcudnn7-dev_7.6.3.28-1+cuda10.0_arm64.deb .
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN dpkg -i \
+    cuda-repo-l4t-10-0-local-10.0.326_1.0-1_arm64.deb \
+    libcudnn7_7.6.3.28-1+cuda10.0_arm64.deb \
+    libcudnn7-dev_7.6.3.28-1+cuda10.0_arm64.deb \
+    && apt-key add /var/cuda-repo-10-0-local-10.0.326/*.pub \
+    && apt-get update \
+    && apt-get install --no-install-recommends \
+    cuda-compiler-10-0 \
+    cuda-samples-10-0 -y \
+    && rm -rf ./*.deb \
+    && dpkg --purge cuda-repo-l4t-10-0-local-10.0.326
+
+# RUN rm -rf /usr/local/cuda-10.0/targets \
+#     && rm -rf /usr/local/cuda-10.0/doc \
+#     && rm -rf /usr/local/cuda-10.0/samples
+
+# ----------------------------------------------------------------------------
+
+FROM balenalib/jetson-nano-ubuntu:bionic-build as nvmpi
+
+WORKDIR /usr/src/app
+
+COPY --from=drivers /opt/drivers/ /
+COPY --from=cuda /usr/local/cuda-10.0 /usr/local/cuda-10.0
+COPY --from=cuda /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=cuda /usr/local/lib /usr/local/lib
+
+ENV PATH /usr/local/cuda-10.0/bin:${PATH}
+RUN echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
+    && ldconfig
+
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-    libegl1-mesa-dev=19.2.8-0ubuntu0~18.04.2 \
-    cmake=3.10.2-1ubuntu2.18.04.1 \
-    libx264-dev=2:0.152.2854+gite9a5903-2 \
-    libx265-dev=2.6-3 \
+    && apt-get install --no-install-recommends -y cmake \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
-    && ldconfig \
     && git -c advice.detachedHead=false clone https://github.com/jocover/jetson-ffmpeg.git . \
     && sed 's|v4l2|libv4l2.so.0|' -i CMakeLists.txt
 
-WORKDIR /usr/src/nvmpi/build
+WORKDIR /usr/src/app/build
 
 RUN cmake .. \
     && make \
     && make install \
     && ldconfig
 
-WORKDIR /usr/src/ffmpeg
+# ----------------------------------------------------------------------------
 
-RUN git -c advice.detachedHead=false clone git://source.ffmpeg.org/ffmpeg.git -b release/4.2 --depth=1 . \
-    && git apply /usr/src/nvmpi/ffmpeg_nvmpi.patch \
-    && ./configure --enable-nvmpi --enable-nonfree --enable-openssl --enable-libx264 --enable-libx265 --enable-gpl --prefix=/opt/ffmpeg/usr \
+FROM balenalib/jetson-nano-ubuntu:bionic-build as ffmpeg
+
+WORKDIR /usr/src/app
+
+COPY --from=drivers /opt/drivers/ /
+COPY --from=cuda /usr/local/cuda-10.0 /usr/local/cuda-10.0
+COPY --from=cuda /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=cuda /usr/local/lib /usr/local/lib
+# COPY --from=nvmpi /usr/local/lib/libnvmpi* /usr/local/lib/
+
+ENV PATH /usr/local/cuda-10.0/bin:${PATH}
+RUN echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
+    && ldconfig
+
+RUN git -c advice.detachedHead=false clone https://git.ffmpeg.org/ffmpeg.git -b release/4.2 --depth 1 . \
+    && ./configure \
+    # --pkg-config-flags=--static \
+    # --extra-libs=-static \
+    # --extra-cflags=--static \
+    --extra-cflags=-I/usr/local/cuda-10.0/include \
+    --extra-ldflags=-L/usr/local/cuda-10.0/lib64 \
+    --prefix=/opt/ffmpeg/usr \
+    --enable-cuda-nvcc \
+    --enable-nonfree \
+    --enable-libnpp \
+    --enable-openssl \
     && make -j 8 \
     && make install
+
+# RUN git -c advice.detachedHead=false clone git://source.ffmpeg.org/ffmpeg.git -b release/4.2 --depth 1 . \
+#     && wget https://github.com/jocover/jetson-ffmpeg/raw/master/ffmpeg_nvmpi.patch \
+#     && git apply ffmpeg_nvmpi.patch \
+#     && ./configure \
+#     --prefix=/opt/ffmpeg/usr \
+#     --enable-nvmpi \
+#     --enable-nonfree \
+#     && make -j 8 \
+#     && make install
 
 # ----------------------------------------------------------------------------
 
 FROM balenalib/jetson-nano-ubuntu-node:12-bionic-build as shinobi
 
-WORKDIR /opt/shinobi
+WORKDIR /usr/src/app
 
 ENV NODE_ENV production
 
@@ -63,31 +127,34 @@ RUN git clone https://gitlab.com/Shinobi-Systems/Shinobi.git --depth 1 . \
 
 FROM balenalib/jetson-nano-ubuntu-node:12-bionic as final
 
-COPY --from=l4t /opt/drivers/ /
-COPY --from=ffmpeg /usr/local/lib/libnvmpi.so* /usr/local/lib/
+WORKDIR /opt/shinobi
+
+COPY --from=drivers /opt/drivers/ /
+COPY --from=cuda /usr/local/cuda-10.0 /usr/local/cuda-10.0
+COPY --from=cuda /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=cuda /usr/local/lib /usr/local/lib
+# COPY --from=nvmpi /usr/local/lib/libnvmpi* /usr/local/lib/
 COPY --from=ffmpeg /opt/ffmpeg/ /
-COPY --from=shinobi /opt/shinobi /opt/shinobi
+COPY --from=shinobi /usr/src/app /opt/shinobi
+
+ENV PATH /usr/local/cuda-10.0/bin:${PATH}
+RUN echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
+    && ldconfig
 
 ENV UDEV 1
-
 ENV NODE_ENV production
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-    mariadb-client=1:10.1.44-0ubuntu0.18.04.1 \
-    libegl1-mesa-dev=19.2.8-0ubuntu0~18.04.2 \
-    x264=2:0.152.2854+gite9a5903-2 \
-    x265=2.6-3 \
-    libxcb-shm0=1.13-2~ubuntu18.04 \
-    jq=1.5+dfsg-2 \
+    jq \
+    mariadb-client \
+    # libegl1-mesa \
+    # libxcb-shm0 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && npm install npm@latest -g \
-    && npm install pm2@3.0.0 -g \
-    && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
-    && ldconfig
-
-WORKDIR /opt/shinobi
+    && npm install pm2@3.0.0 -g
 
 COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
 
@@ -95,3 +162,5 @@ ENTRYPOINT ["/opt/shinobi/entrypoint.sh"]
 
 CMD ["pm2-docker", "/opt/shinobi/pm2Shinobi.yml"]
 # CMD [ "sleep", "infinity" ]
+
+RUN ffmpeg -version
