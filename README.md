@@ -29,7 +29,7 @@ Application envionment variables apply to all services within the application, a
 ## Usage
 
 ```bash
-# install pre-commit hook (optional)
+# install pre-commit hook to avoid pushing binary files to git (optional)
 ln -s ../../pre-commit .git/hooks/pre-commit
 
 # copy required file(s) from Jetson SDK Manager downloads directory

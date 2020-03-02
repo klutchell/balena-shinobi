@@ -21,6 +21,8 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libegl1-mesa-dev=19.2.8-0ubuntu0~18.04.2 \
     cmake=3.10.2-1ubuntu2.18.04.1 \
+    libx264-dev=2:0.152.2854+gite9a5903-2 \
+    libx265-dev=2.6-3 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
@@ -39,7 +41,7 @@ WORKDIR /usr/src/ffmpeg
 
 RUN git -c advice.detachedHead=false clone git://source.ffmpeg.org/ffmpeg.git -b release/4.2 --depth=1 . \
     && git apply /usr/src/nvmpi/ffmpeg_nvmpi.patch \
-    && ./configure --enable-nvmpi --enable-nonfree --enable-openssl --prefix=/opt/ffmpeg/usr \
+    && ./configure --enable-nvmpi --enable-nonfree --enable-openssl --enable-libx264 --enable-libx265 --enable-gpl --prefix=/opt/ffmpeg/usr \
     && make -j 8 \
     && make install
 
@@ -74,6 +76,8 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     mariadb-client=1:10.1.44-0ubuntu0.18.04.1 \
     libegl1-mesa-dev=19.2.8-0ubuntu0~18.04.2 \
+    x264=2:0.152.2854+gite9a5903-2 \
+    x265=2.6-3 \
     libxcb-shm0=1.13-2~ubuntu18.04 \
     jq=1.5+dfsg-2 \
     && apt-get clean \
