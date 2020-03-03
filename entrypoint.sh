@@ -39,6 +39,9 @@ MYSQL_PORT=3306
 # CUSTOM_CPU_COMMAND="top -b -n 2 | awk '{IGNORECASE = 1} /^.?Cpu/ {gsub(\"id,\",\"100\",\$8); gsub(\"%\",\"\",\$8); print 100-\$8}' | tail -n 1"
 # jq '.customCpuCommand = $val' --arg val "${CUSTOM_CPU_COMMAND}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 
+# workaround: paste this into the config via super console
+# "customCpuCommand": "top -b -n 2 | awk '{IGNORECASE = 1} /^.?Cpu/ {gsub(\"id,\",\"100\",$8); gsub(\"%\",\"\",$8); print 100-$8}' | tail -n 1",
+
 jq '.[0].mail = $val' --arg val "${ADMIN_EMAIL}" /config/super.json > /tmp/$$.json && mv /tmp/$$.json /config/super.json
 jq '.[0].pass = $val' --arg val "${ADMIN_PASSWORD_MD5}" /config/super.json > /tmp/$$.json && mv /tmp/$$.json /config/super.json
 

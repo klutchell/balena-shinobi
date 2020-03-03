@@ -16,24 +16,39 @@ RUN dpkg -i \
     && apt-key add /var/cuda-repo-10-0-local-10.0.326/*.pub \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
+    cmake \
     cuda-compiler-10-0 \
     cuda-samples-10-0 \
     # cuda-npp-dev-10-0 \
     # cuda-nvcc-10-0 \
+    libegl1-mesa-dev \
     && rm -rf ./*.deb \
     && dpkg --purge cuda-repo-l4t-10-0-local-10.0.326 \
     && mkdir /opt/drivers \
     && tar xjf Linux_for_Tegra/nv_tegra/nvidia_drivers.tbz2 -C /opt/drivers \
     && tar xjf Linux_for_Tegra/nv_tegra/config.tbz2 --exclude=etc/hosts --exclude=etc/hostname -C /opt/drivers \
-    && rm -rf Linux_for_Tegra
-
-WORKDIR /usr/src/ffmpeg
+    && rm -rf Linux_for_Tegra \
+    && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
+    && ldconfig
 
 ENV PATH /usr/local/cuda-10.0/bin:${PATH}
 
+WORKDIR /usr/src/nvmpi
+
+RUN git -c advice.detachedHead=false clone https://github.com/jocover/jetson-ffmpeg.git . \
+    && sed 's|v4l2|libv4l2.so.0|' -i CMakeLists.txt
+
+WORKDIR /usr/src/nvmpi/build
+
+RUN cmake .. \
+    && make \
+    && make install \
+    && ldconfig
+
+WORKDIR /usr/src/ffmpeg
+
 RUN git -c advice.detachedHead=false clone https://git.ffmpeg.org/ffmpeg.git -b release/4.2 --depth 1 . \
-    && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
-    && ldconfig \
+    && git apply /usr/src/nvmpi/ffmpeg_nvmpi.patch \
     && ./configure \
     --extra-cflags=-I/usr/local/cuda-10.0/include \
     --extra-ldflags=-L/usr/local/cuda-10.0/lib64 \
@@ -42,6 +57,7 @@ RUN git -c advice.detachedHead=false clone https://git.ffmpeg.org/ffmpeg.git -b 
     --enable-nonfree \
     --enable-libnpp \
     --enable-openssl \
+    --enable-nvmpi \
     && make -j 8 \
     && make install \
     && rm -rf /usr/local/cuda-10.0/doc \
@@ -59,18 +75,18 @@ COPY --from=build /usr/local/cuda-10.0 /usr/local/cuda-10.0
 COPY --from=build /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
 COPY --from=build /usr/local/lib /usr/local/lib
 COPY --from=build /opt/ffmpeg/ /
+COPY --from=build /usr/local/lib/libnvmpi* /usr/local/lib/
 
 ENV UDEV 1
+ENV PATH /usr/local/cuda-10.0/bin:${PATH}
 ENV NODE_ENV production
 ENV DEBIAN_FRONTEND noninteractive
-ENV PATH /usr/local/cuda-10.0/bin:${PATH}
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
+    # ffmpeg \
     jq \
     mariadb-client \
-    # libegl1-mesa \
-    # libxcb-shm0 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && git clone https://gitlab.com/Shinobi-Systems/Shinobi.git --depth 1 . \
@@ -79,13 +95,9 @@ RUN apt-get update \
     && npm install pm2@3.0.0 -g \
     && npm install --unsafe-perm \
     && npm audit fix --force
-    # && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
-    # && ldconfig
 
 COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
 
 ENTRYPOINT ["/opt/shinobi/entrypoint.sh"]
 
 CMD ["pm2-docker", "/opt/shinobi/pm2Shinobi.yml"]
-
-RUN ffmpeg -version
