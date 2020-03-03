@@ -1,8 +1,22 @@
-FROM balenalib/jetson-nano-ubuntu:bionic-build as build
+FROM balenalib/jetson-nano-ubuntu:bionic-build as drivers
 
 WORKDIR /usr/src/app
 
 ADD l4t-32.3.1/Jetson-210_Linux_R32.3.1_aarch64.tbz2 .
+
+RUN mkdir /opt/drivers \
+    && tar xjf Linux_for_Tegra/nv_tegra/nvidia_drivers.tbz2 -C /opt/drivers \
+    && tar xjf Linux_for_Tegra/nv_tegra/config.tbz2 --exclude=etc/hosts --exclude=etc/hostname -C /opt/drivers \
+    && rm -rf Linux_for_Tegra
+
+# ----------------------------------------------------------------------------
+
+FROM balenalib/jetson-nano-ubuntu:bionic-build as ffmpeg
+
+WORKDIR /usr/src/app
+
+COPY --from=drivers /opt/drivers/ /
+
 COPY l4t-32.3.1/cuda-repo-l4t-10-0-local-10.0.326_1.0-1_arm64.deb .
 COPY l4t-32.3.1/libcudnn7_7.6.3.28-1+cuda10.0_arm64.deb .
 COPY l4t-32.3.1/libcudnn7-dev_7.6.3.28-1+cuda10.0_arm64.deb .
@@ -18,16 +32,31 @@ RUN dpkg -i \
     && apt-get install --no-install-recommends -y \
     cmake \
     cuda-compiler-10-0 \
-    cuda-samples-10-0 \
-    # cuda-npp-dev-10-0 \
-    # cuda-nvcc-10-0 \
+    cuda-cublas-dev-10-0 \
+    cuda-cudart-dev-10-0 \
+    cuda-cufft-dev-10-0 \
+    cuda-curand-dev-10-0 \
+    cuda-cusolver-dev-10-0 \
+    cuda-cusparse-dev-10-0 \
+    cuda-driver-dev-10-0 \
+    cuda-npp-dev-10-0 \
+    cuda-nvcc-10-0 \
+    cuda-nvgraph-dev-10-0 \
+    cuda-nvrtc-dev-10-0 \
     libegl1-mesa-dev \
+    libass-dev \
+    libmp3lame-dev \
+    libopus-dev \
+    librtmp-dev \
+    libtheora-dev \
+    libvorbis-dev \
+    libvpx-dev \
+    libx264-dev \
+    libx265-dev \
     && rm -rf ./*.deb \
     && dpkg --purge cuda-repo-l4t-10-0-local-10.0.326 \
-    && mkdir /opt/drivers \
-    && tar xjf Linux_for_Tegra/nv_tegra/nvidia_drivers.tbz2 -C /opt/drivers \
-    && tar xjf Linux_for_Tegra/nv_tegra/config.tbz2 --exclude=etc/hosts --exclude=etc/hostname -C /opt/drivers \
-    && rm -rf Linux_for_Tegra \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
     && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
     && ldconfig
 
@@ -58,6 +87,20 @@ RUN git -c advice.detachedHead=false clone https://git.ffmpeg.org/ffmpeg.git -b 
     --enable-libnpp \
     --enable-openssl \
     --enable-nvmpi \
+    --enable-gpl \
+    --enable-small \
+    --enable-libmp3lame \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libvpx \
+    --enable-libtheora \
+    --enable-libvorbis \
+    --enable-libopus \
+    --enable-libass \
+    --enable-librtmp \
+    --enable-postproc \
+    --enable-libfreetype \
+    --disable-debug \
     && make -j 8 \
     && make install \
     && rm -rf /usr/local/cuda-10.0/doc \
@@ -70,12 +113,12 @@ FROM balenalib/jetson-nano-ubuntu-node:12-bionic-build as run
 
 WORKDIR /opt/shinobi
 
-COPY --from=build /opt/drivers/ /
-COPY --from=build /usr/local/cuda-10.0 /usr/local/cuda-10.0
-COPY --from=build /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
-COPY --from=build /usr/local/lib /usr/local/lib
-COPY --from=build /opt/ffmpeg/ /
-COPY --from=build /usr/local/lib/libnvmpi* /usr/local/lib/
+COPY --from=drivers /opt/drivers/ /
+COPY --from=ffmpeg /usr/local/cuda-10.0 /usr/local/cuda-10.0
+COPY --from=ffmpeg /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=ffmpeg /usr/local/lib /usr/local/lib
+COPY --from=ffmpeg /opt/ffmpeg/ /
+COPY --from=ffmpeg /usr/local/lib/libnvmpi* /usr/local/lib/
 
 ENV UDEV 1
 ENV PATH /usr/local/cuda-10.0/bin:${PATH}
@@ -86,11 +129,12 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     # ffmpeg \
     jq \
+    libegl1-mesa \
     mariadb-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && git clone https://gitlab.com/Shinobi-Systems/Shinobi.git --depth 1 . \
-    && git -c advice.detachedHead=false checkout f1f32c4ee109836398776f35a1aa05f0e76972df \
+    && git clone https://gitlab.com/Shinobi-Systems/Shinobi.git . \
+    && git -c advice.detachedHead=false checkout abd40e178a06512f8eec87591289903f79a59779 \
     && npm install npm@latest -g \
     && npm install pm2@3.0.0 -g \
     && npm install --unsafe-perm \
