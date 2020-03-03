@@ -46,12 +46,12 @@ docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 docker buildx create --use --driver docker-container
 docker buildx build . --platform linux/arm64 --load --progress plain --target final -t shinobi
 
-# check ffmpeg supported x264 encoders/decoders (optional)
+# verify some ffmpeg features were included correctly (optional)
 docker run --rm -it --entrypoint ldd shinobi /usr/bin/ffmpeg
 docker run --rm -it --entrypoint ffmpeg shinobi -version
 docker run --rm -it --entrypoint ffmpeg shinobi -encoders | grep 264
 docker run --rm -it --entrypoint ffmpeg shinobi -decoders | grep 264
-docker run --rm -it --entrypoint ffmpeg shinobi -protocols | grep http
+docker run --rm -it --entrypoint ffmpeg shinobi -protocols | grep https
 
 # push to balena app
 balena login
