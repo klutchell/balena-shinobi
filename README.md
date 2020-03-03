@@ -44,7 +44,7 @@ cp ~/Downloads/nvidia/sdkm_downloads/libcudnn7-dev_7.6.3.28-1+cuda10.0_arm64.deb
 export DOCKER_CLI_EXPERIMENTAL=enabled
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 docker buildx create --use --driver docker-container
-docker buildx build . --platform linux/arm64 --load --progress plain --target final -t shinobi
+docker buildx build . --platform linux/arm64 --load --progress plain -t shinobi
 
 # verify some ffmpeg features were included correctly (optional)
 docker run --rm -it --entrypoint ldd shinobi /usr/bin/ffmpeg
