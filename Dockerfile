@@ -44,10 +44,8 @@ RUN dpkg -i \
     cuda-nvgraph-dev-10-0 \
     cuda-nvrtc-dev-10-0 \
     libegl1-mesa-dev \
-    libass-dev \
     libmp3lame-dev \
     libopus-dev \
-    librtmp-dev \
     libtheora-dev \
     libvorbis-dev \
     libvpx-dev \
@@ -88,7 +86,6 @@ RUN git -c advice.detachedHead=false clone https://git.ffmpeg.org/ffmpeg.git -b 
     --enable-openssl \
     --enable-nvmpi \
     --enable-gpl \
-    --enable-small \
     --enable-libmp3lame \
     --enable-libx264 \
     --enable-libx265 \
@@ -96,9 +93,6 @@ RUN git -c advice.detachedHead=false clone https://git.ffmpeg.org/ffmpeg.git -b 
     --enable-libtheora \
     --enable-libvorbis \
     --enable-libopus \
-    --enable-libass \
-    --enable-librtmp \
-    --enable-postproc \
     --enable-libfreetype \
     --disable-debug \
     && make -j 8 \

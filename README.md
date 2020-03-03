@@ -58,6 +58,12 @@ balena login
 balena push shinobi
 ```
 
+Fix the cpu monitor by pasting this into `config.json` via the superuser login.
+
+```json
+"customCpuCommand": "top -b -n 2 | awk '{IGNORECASE = 1} /^.?Cpu/ {gsub(\"id,\",\"100\",$8); gsub(\"%\",\"\",$8); print 100-$8}' | tail -n 1",
+```
+
 ## Contributing
 
 Please open an issue or submit a pull request with any features, fixes, or changes.
