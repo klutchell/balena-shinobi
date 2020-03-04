@@ -18,6 +18,6 @@ services:
       - mariadb
 
   mariadb:
-    image: mariadb
+    image: mariadb:10-bionic
     volumes:
       - mariadb:/var/lib/mysql

@@ -110,10 +110,9 @@ WORKDIR /opt/shinobi
 
 COPY --from=drivers /opt/drivers/ /
 COPY --from=ffmpeg /usr/local/cuda-10.0 /usr/local/cuda-10.0
-COPY --from=ffmpeg /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
-COPY --from=ffmpeg /usr/local/lib /usr/local/lib
-COPY --from=ffmpeg /opt/ffmpeg/ /
+COPY --from=ffmpeg /usr/lib/aarch64-linux-gnu/tegra* /usr/lib/aarch64-linux-gnu/
 COPY --from=ffmpeg /usr/local/lib/libnvmpi* /usr/local/lib/
+COPY --from=ffmpeg /opt/ffmpeg/ /
 
 ENV UDEV 1
 ENV PATH /usr/local/cuda-10.0/bin:${PATH}
@@ -125,6 +124,7 @@ RUN apt-get update \
     jq \
     mariadb-client \
     libegl1-mesa \
+    libxcb-shape0 \
     libmp3lame0 \
     libopus0 \
     libtheora0 \
@@ -143,7 +143,10 @@ RUN apt-get update \
     && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
     && ldconfig
 
-COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
+COPY entrypoint.sh pm2Shinobi.yml h264_nvmpi.patch cpu_usage.patch /opt/shinobi/
+
+RUN git apply h264_nvmpi.patch \
+    && git apply cpu_usage.patch
 
 ENTRYPOINT ["/opt/shinobi/entrypoint.sh"]
 
