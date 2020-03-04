@@ -94,6 +94,7 @@ RUN git -c advice.detachedHead=false clone https://git.ffmpeg.org/ffmpeg.git -b 
     --enable-libvorbis \
     --enable-libopus \
     --enable-libfreetype \
+    --disable-doc \
     --disable-debug \
     && make -j 8 \
     && make install \
@@ -121,10 +122,16 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-    # ffmpeg \
     jq \
-    libegl1-mesa \
     mariadb-client \
+    libegl1-mesa \
+    libmp3lame0 \
+    libopus0 \
+    libtheora0 \
+    libvorbis0a \
+    libvpx5 \
+    x264 \
+    x265 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && git clone https://gitlab.com/Shinobi-Systems/Shinobi.git . \
@@ -132,7 +139,9 @@ RUN apt-get update \
     && npm install npm@latest -g \
     && npm install pm2@3.0.0 -g \
     && npm install --unsafe-perm \
-    && npm audit fix --force
+    && npm audit fix --force \
+    && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
+    && ldconfig
 
 COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
 

@@ -48,17 +48,15 @@ docker buildx build . --platform linux/arm64 --load --progress plain -t shinobi
 
 # verify some ffmpeg features were included correctly (optional)
 docker run --rm -it --entrypoint ldd shinobi /usr/bin/ffmpeg
-docker run --rm -it --entrypoint ffmpeg shinobi -version
 docker run --rm -it --entrypoint ffmpeg shinobi -encoders | grep 264
 docker run --rm -it --entrypoint ffmpeg shinobi -decoders | grep 264
-docker run --rm -it --entrypoint ffmpeg shinobi -protocols | grep https
 
 # push to balena app
 balena login
 balena push shinobi
 ```
 
-Fix the cpu monitor by pasting this into `config.json` via the superuser login.
+Fix the cpu monitor by adding this to `config.json` via the superuser login.
 
 ```json
 "customCpuCommand": "top -b -n 2 | awk '{IGNORECASE = 1} /^.?Cpu/ {gsub(\"id,\",\"100\",$8); gsub(\"%\",\"\",$8); print 100-$8}' | tail -n 1",
