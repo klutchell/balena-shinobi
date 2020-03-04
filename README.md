@@ -7,6 +7,7 @@ shinobi stack for balenaCloud
 - NVIDIA Jetson Nano development board
 - 32GB microSD card
 - External USB drive with a large partition labeled VIDEOS
+- Balena CLI installed
 
 ## Getting Started
 
@@ -39,8 +40,8 @@ docker buildx build . --platform linux/arm64 --load --progress plain -t shinobi
 # verify which ffmpeg features were included (optional)
 docker run --rm -it --entrypoint ldd shinobi /usr/bin/ffmpeg
 docker run --rm -it --entrypoint ffmpeg shinobi -hwaccels
-docker run --rm -it --entrypoint ffmpeg shinobi -decoders | grep 264
 docker run --rm -it --entrypoint ffmpeg shinobi -encoders | grep 264
+docker run --rm -it --entrypoint ffmpeg shinobi -decoders | grep 264
 
 # push to balena app
 balena login
