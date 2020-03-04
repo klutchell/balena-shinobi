@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# install with:
-#   ln -s ../../pre-commit .git/hooks/pre-commit
-
-# un-stage binary files
-git reset $(find . -type f ! -size 0 -exec grep -IL . "{}" \;)

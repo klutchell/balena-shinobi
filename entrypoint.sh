@@ -41,7 +41,7 @@ jq '.db.password = $val' --arg val "${MYSQL_PASSWORD}" /config/conf.json > /tmp/
 jq '.db.database = $val' --arg val "${MYSQL_DATABASE}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 jq '.db.port = $val' --arg val "${MYSQL_PORT}" /config/conf.json > /tmp/$$.json && mv /tmp/$$.json /config/conf.json
 
-# TODO: backup/restore plugin configurations
+# TODO: backup/restore plugin config files
 
 while ! mysqladmin ping -h"${MYSQL_HOST}" 2>/dev/null
 do
