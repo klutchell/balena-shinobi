@@ -8,9 +8,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-    jq \
-    mariadb-client \
-    ffmpeg \
+    jq mariadb-client ffmpeg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && git clone https://gitlab.com/Shinobi-Systems/Shinobi.git . \
@@ -18,9 +16,7 @@ RUN apt-get update \
     && npm install npm@latest -g \
     && npm install pm2@3.0.0 -g \
     && npm install --unsafe-perm \
-    && npm audit fix --force \
-    && echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
-    && ldconfig
+    && npm audit fix --force
 
 COPY entrypoint.sh pm2Shinobi.yml cpu_usage.patch /opt/shinobi/
 
