@@ -14,7 +14,7 @@ ln -s /config/conf.json /opt/shinobi/conf.json
 if [ ! -f /config/super.json ]
 then
     echo "Creating super.json ..."
-    cp /opt/shinobi/super.sample.json /opt/shinobi/super.json
+    cp /opt/shinobi/super.sample.json /config/super.json
 fi
 
 rm /opt/shinobi/super.json 2>/dev/null || true
