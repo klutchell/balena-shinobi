@@ -18,9 +18,13 @@ RUN apt-get update \
     && npm install --unsafe-perm \
     && npm audit fix --force \
     && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/merge_requests/170.diff \
-    && git apply 170.diff
+    && git apply 170.diff \
+    && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/merge_requests/171.diff \
+    && git apply 171.diff
 
-COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
+COPY entrypoint.sh pm2Shinobi.yml event_monitor_name.patch /opt/shinobi/
+
+RUN git apply event_monitor_name.patch
 
 ENTRYPOINT ["/opt/shinobi/entrypoint.sh"]
 
