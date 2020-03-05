@@ -7,7 +7,7 @@ shinobi stack for balenaCloud
 - NVIDIA Jetson Nano development board
 - 32GB microSD card & reader
 - External USB drive with a large partition labeled VIDEOS
-- Workstation with [balena CLI](https://github.com/balena-io/balena-cli/blob/master/INSTALL.md)
+- Workstation with the balena CLI
 
 ## Getting Started
 
@@ -26,6 +26,9 @@ Deployment is carried out by downloading the project and pushing it to your devi
 <https://www.balena.io/docs/reference/balena-cli/>
 
 ```bash
+# clone project
+git clone https://github.com/klutchell/balena-shinobi.git
+
 # push to balenaCloud
 balena login
 balena push myApp
@@ -47,11 +50,11 @@ Application envionment variables apply to all services within the application, a
 
 ## Usage
 
-Login as the superuser to create your first user account.
+Log in as superuser to create your first user account. The default credentials are in your device logs.
 
 <http://mydevice.local/super>
 
-The login to the dashboard and start adding monitors (cameras).
+Then log in to the dashboard and start adding monitors (cameras).
 
 <http://mydevice.local>
 
