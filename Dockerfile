@@ -22,9 +22,7 @@ RUN apt-get update \
     && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/merge_requests/171.diff \
     && git apply 171.diff
 
-COPY entrypoint.sh pm2Shinobi.yml event_monitor_name.patch /opt/shinobi/
-
-RUN git apply event_monitor_name.patch
+COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
 
 ENTRYPOINT ["/opt/shinobi/entrypoint.sh"]
 
