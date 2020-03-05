@@ -37,6 +37,24 @@ balena push myApp
 balena push mydevice.local --env MYSQL_ROOT_PASSWORD=******** --env TZ=America/Toronto
 ```
 
+Prepare an external drive for recordings by creating a large partition with the label `VIDEOS`.
+
+```bash
+parted -a optimal /dev/sda mklabel GPT
+parted -a optimal /dev/sda mkpart VIDEOS ext4 primary 0% 100%
+```
+
+If this partition is detected it will be automounted to `/media/{UUID}` at boot and from there it can be added to your `config.json`.
+
+```json
+  "addStorage": [
+      {
+         "name": "second",
+         "path": "/media/2790e401-37e5-46f8-a8cd-6e0884a1a1a2/videos2"
+      }
+   ],
+```
+
 ### Application Environment Variables
 
 Application envionment variables apply to all services within the application, and can be applied fleet-wide to apply to multiple devices.
@@ -72,6 +90,9 @@ docker run --rm -it --entrypoint ldd shinobi /usr/bin/ffmpeg
 docker run --rm -it --entrypoint ffmpeg shinobi -hwaccels
 docker run --rm -it --entrypoint ffmpeg shinobi -encoders | grep 264
 docker run --rm -it --entrypoint ffmpeg shinobi -decoders | grep 264
+
+# dump the flags being passed to ffmpeg (while connected to running container)
+ps -eo args | grep ffmpeg | head -n -1
 ```
 
 ## Contributing

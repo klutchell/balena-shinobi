@@ -17,10 +17,10 @@ RUN apt-get update \
     && npm install pm2@3.0.0 -g \
     && npm install --unsafe-perm \
     && npm audit fix --force \
-    && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/merge_requests/170.diff \
-    && git apply 170.diff \
-    && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/merge_requests/171.diff \
-    && git apply 171.diff
+    && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/commit/fb3a0300129f41d7d16c7f598f22e8d67c1fdc46.diff \
+    && git apply fb3a0300129f41d7d16c7f598f22e8d67c1fdc46.diff \
+    && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/commit/294c6f7e29ff7f09b91bb35128711c76986da23a.diff \
+    && git apply 294c6f7e29ff7f09b91bb35128711c76986da23a.diff
 
 COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
 
