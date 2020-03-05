@@ -6,8 +6,7 @@ shinobi stack for balenaCloud
 
 - NVIDIA Jetson Nano development board
 - 32GB microSD card & reader
-- External USB drive with a large partition labeled VIDEOS
-- Workstation with the balena CLI
+- External USB drive for video storage
 
 ## Getting Started
 
@@ -37,6 +36,27 @@ balena push myApp
 balena push mydevice.local --env MYSQL_ROOT_PASSWORD=******** --env TZ=America/Toronto
 ```
 
+### Application Environment Variables
+
+Application envionment variables apply to all services within the application, and can be applied fleet-wide to apply to multiple devices.
+
+|Name|Example|Purpose|
+|---|---|---|
+|`MYSQL_ROOT_PASSWORD`|`********`|(required) password that will be set for the MariaDB root account|
+|`ADMIN_EMAIL`|`admin@shinobi.video`|(optional) email that will be set for the Shinobi superuser account|
+|`ADMIN_PASSWORD`|`admin`|(optional) password that will be hashed and set for the Shinobi superuser account|
+|`TZ`|`America/Toronto`|(optional) inform services of the [timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) in your location|
+
+## Usage
+
+Log in as superuser to create your first user account. The default credentials are in your device logs.
+
+<http://mydevice.local/super>
+
+Then log in to the dashboard and start adding monitors (cameras).
+
+<http://mydevice.local>
+
 Prepare an external drive for recordings by creating a large partition with the label `VIDEOS`.
 
 ```bash
@@ -54,27 +74,6 @@ If this partition is detected it will be automounted to `/media/{UUID}` at boot 
       }
    ],
 ```
-
-### Application Environment Variables
-
-Application envionment variables apply to all services within the application, and can be applied fleet-wide to apply to multiple devices.
-
-|Name|Example|Purpose|
-|---|---|---|
-|`MYSQL_ROOT_PASSWORD`|`********`|(required) password that will be set for the MariaDB root account|
-|`ADMIN_EMAIL`|`admin@shinobi.video`|(optional) email that will be set for the Shinobi superuser account|
-|`ADMIN_PASSWORD`|`admin`|(optional) password that will be set for the Shinobi superuser account|
-|`TZ`|`America/Toronto`|(optional) inform services of the [timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) in your location|
-
-## Usage
-
-Log in as superuser to create your first user account. The default credentials are in your device logs.
-
-<http://mydevice.local/super>
-
-Then log in to the dashboard and start adding monitors (cameras).
-
-<http://mydevice.local>
 
 ## Development
 
