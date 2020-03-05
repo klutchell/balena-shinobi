@@ -26,9 +26,9 @@ ADMIN_EMAIL="${ADMIN_EMAIL:-admin@shinobi.video}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin}"
 ADMIN_PASSWORD_MD5="$(echo -n "${ADMIN_PASSWORD}" | md5sum | sed -e 's/  -$//')"
 
-MYSQL_HOST="${MYSQL_HOST:-mariadb}"
-MYSQL_USER="${MYSQL_USER:-shinobi}"
-MYSQL_PASSWORD="${MYSQL_PASSWORD:-}"
+MYSQL_HOST="mariadb"
+MYSQL_USER="shinobi"
+MYSQL_PASSWORD=""
 MYSQL_DATABASE="ccio"
 MYSQL_PORT=3306
 

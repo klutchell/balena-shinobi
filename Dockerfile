@@ -16,11 +16,11 @@ RUN apt-get update \
     && npm install npm@latest -g \
     && npm install pm2@3.0.0 -g \
     && npm install --unsafe-perm \
-    && npm audit fix --force
+    && npm audit fix --force \
+    && wget https://gitlab.com/Shinobi-Systems/Shinobi/-/merge_requests/170.diff \
+    && git apply 170.diff
 
-COPY entrypoint.sh pm2Shinobi.yml cpu_usage.patch /opt/shinobi/
-
-RUN git apply cpu_usage.patch
+COPY entrypoint.sh pm2Shinobi.yml /opt/shinobi/
 
 ENTRYPOINT ["/opt/shinobi/entrypoint.sh"]
 
