@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 if [ ! -f /config/conf.json ]
@@ -63,8 +63,8 @@ mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -h"${MYSQL_HOST}" -e "source /opt/shino
 for uuid in $(blkid -tLABEL=VIDEOS -sUUID -ovalue)
 do
     echo "Mounting ${uuid} ..."
-    mkdir /media/${uuid} 2>/dev/null || true
-    mount UUID=${uuid} /media/${uuid}
+    mkdir /media/"${uuid}" 2>/dev/null || true
+    mount UUID="${uuid}" /media/"${uuid}"
 done
 
 echo "Starting Shinobi ..."
