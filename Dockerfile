@@ -12,7 +12,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && git clone https://gitlab.com/Shinobi-Systems/Shinobi.git . \
-    && git -c advice.detachedHead=false checkout abd40e178a06512f8eec87591289903f79a59779 \
+    && git -c advice.detachedHead=false checkout c2b393b86de5511d6d2d60dfe5548fe0f2889793 \
     && npm install npm@latest -g \
     && npm install pm2@3.0.0 -g \
     && npm install --unsafe-perm \
