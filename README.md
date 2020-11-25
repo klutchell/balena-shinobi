@@ -1,6 +1,6 @@
-# balena-shinobi
+# balena-shinobi <img src="https://raw.githubusercontent.com/klutchell/balena-shinobi/main/logo.png" alt="Shinobi CCTV" height="24"/>
 
-shinobi video stack for balenaCloud
+Shinobi CCTV stack for NVIDIA Jetson Nano with balenaCloud
 
 ## Requirements
 
