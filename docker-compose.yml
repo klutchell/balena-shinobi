@@ -4,16 +4,18 @@ volumes:
   shinobi:
   videos:
   mariadb:
+  plugins:
 
 services:
   shinobi:
-    build: .
+    build: ./shinobi
     privileged: true
     ports:
       - "80:8080/tcp"
     volumes:
       - shinobi:/config
-      - videos:/opt/shinobi/videos
+      - videos:/home/Shinobi/videos
+      - plugins:/home/Shinobi/plugins
     links:
       - mariadb
 
